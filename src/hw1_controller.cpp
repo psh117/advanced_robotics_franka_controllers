@@ -91,17 +91,23 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> tau_measured(robot_state.tau_J.data());
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> tau_J_d(robot_state.tau_J_d.data());
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> gravity(gravity_array.data());
-
+  Eigen::Map<const Eigen::Matrix<double, 7, 7>> mass_matrix(massmatrix_array.data());
+  Eigen::Map<const Eigen::Matrix<double, 7, 1>> coriolis(coriolis_array.data());
+  Eigen::Map<const Eigen::Matrix<double, 7, 1>> q(robot_state.q.data());
+  Eigen::Map<const Eigen::Matrix<double, 7, 1>> qd(robot_state.dq.data());
+  Eigen::Matrix<double, 7, 1> tau_cmd;
 
   // Compute here
 
+  
+
   for (size_t i = 0; i < 7; ++i) {
-    joint_handles_[i].setCommand(tau_cmd_(i));
+    joint_handles_[i].setCommand(tau_cmd(i));
   }
 
   if (print_rate_trigger_()) {
     ROS_INFO("--------------------------------------------------");
-    ROS_INFO_STREAM("tau :" << tau_cmd_.transpose());
+    ROS_INFO_STREAM("tau :" << tau_cmd.transpose());
   }
 }
 

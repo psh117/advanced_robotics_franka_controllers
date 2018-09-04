@@ -38,8 +38,6 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
   franka_hw::TriggerRate print_rate_trigger_{10}; 
 
 
-  // -- Robotics
-  Eigen::Matrix<double, 7, 1> tau_cmd_;
 };
 
 }  // namespace advanced_robotics_franka_controllers
