@@ -106,7 +106,7 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
 	
 	int kp = 100;
 		
-	tau_cmd = 100(q-q_init);
+	tau_cmd = kp*(q-q_init);
   
 	
   //
