@@ -103,11 +103,10 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Matrix<double, 7, 1> tau_cmd;
 
   // Compute here
-	Eigen::Map<const Eigen::Matrix<double, 3, 1>> x_desired();
 	
 	int kp = 100;
 		
-	tau_cmd = 100(q-q_init)+ gravity;
+	tau_cmd = 100(q-q_init);
   
 	
   //
