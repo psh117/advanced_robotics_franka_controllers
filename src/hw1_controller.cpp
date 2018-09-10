@@ -75,6 +75,11 @@ bool HW1Controller::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle&
 
 void HW1Controller::starting(const ros::Time& time) {
   start_time_ = time;
+  for (size_t i = 0; i < 7; ++i) {
+    q_init(i) = joint_handles_[i].getPosition();
+  }
+ 
+	
 }
 
 
@@ -98,8 +103,14 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Matrix<double, 7, 1> tau_cmd;
 
   // Compute here
-
+	Eigen::Map<const Eigen::Matrix<double, 3, 1>> x_desired();
+	
+	int kp = 100;
+		
+	tau_cmd = 100(q-q_init)+ gravity;
   
+	
+  //
 
   for (size_t i = 0; i < 7; ++i) {
     joint_handles_[i].setCommand(tau_cmd(i));
