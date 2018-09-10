@@ -36,6 +36,8 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
   ros::Time start_time_;
 
   franka_hw::TriggerRate print_rate_trigger_{10}; 
+									   
+  Eigen::Map<const Eigen::Matrix<double, 7, 1>> q_init();
 
 
 };
