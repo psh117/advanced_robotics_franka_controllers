@@ -9,5 +9,5 @@
 
   <rosparam command="load" file="$(find advanced_robotics_franka_controllers)/config/advanced_robotics_franka_controllers.yaml" />
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="hw1_controller"/>
-  <node pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(find advanced_robotics_franka_controllerss)/launch/robot.rviz"/>
+  <node pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(find advanced_robotics_franka_controllers)/launch/robot.rviz"/>
 </launch>
