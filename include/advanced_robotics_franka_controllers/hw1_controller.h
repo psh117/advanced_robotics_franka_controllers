@@ -15,7 +15,7 @@
 #include <ros/time.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <geometry_msgs/Twist.h>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 namespace advanced_robotics_franka_controllers {
 
@@ -37,9 +37,9 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
 
   franka_hw::TriggerRate print_rate_trigger_{10}; 
 									   
-  Eigen::Map<const Eigen::Matrix<double, 7, 1>> q_init();
-  Eigen::Affine3d transform_init;
-  Eigen::Vector3d pos_init;
+  Eigen::Matrix<double, 7, 1> q_init_;
+  Eigen::Affine3d transform_init_;
+  Eigen::Vector3d pos_init_;
 
 
 };
