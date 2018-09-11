@@ -83,7 +83,7 @@ void HW1Controller::starting(const ros::Time& time) {
   const franka::RobotState &robot_state = state_handle_->getRobotState();
   transform_init_ = Eigen::Matrix4d::Map(robot_state.O_T_EE.data());
   pos_init_ = transform_init_.translation();	
-  ori_init_ = trnasform_init_.rotation();
+  ori_init_ = transform_init_.rotation();
   
 }
 
@@ -112,7 +112,7 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
 	
   Eigen::Affine3d transform(Eigen::Matrix4d::Map(robot_state.O_T_EE.data()));
   Eigen::Vector3d position(transform.translation());
-  Eigen::Matrix<double, 3, 3> rotatioin_M(transform.rotation());
+  Eigen::Matrix<double, 3, 3> rotation_M(transform.rotation());
 
   Eigen::Matrix<double, 3, 7> J_pos(jacobian.topRows(3));
   Eigen::Matrix<double, 3, 7> J_ori(jacobian.bottomRows(3));
