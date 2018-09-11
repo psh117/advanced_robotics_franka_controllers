@@ -83,6 +83,8 @@ void HW1Controller::starting(const ros::Time& time) {
   const franka::RobotState &robot_state = state_handle_->getRobotState();
   transform_init_ = Eigen::Matrix4d::Map(robot_state.O_T_EE.data());
   pos_init_ = transform_init_.translation();	
+  ori_init_ = trnasform_init_.rotation();
+  
 }
 
 
@@ -113,13 +115,24 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Matrix<double, 3, 3> rotatioin_M(transform.rotation());
 
   Eigen::Matrix<double, 3, 7> J_pos(jacobian.topRows(3));
+  Eigen::Matrix<double, 3, 7> J_ori(jacobian.bottomRows(3));
  
   Eigen::Matrix<double, 7, 1> tau_cmd;
+	
+	
+  Eigen::Matrix<double, 3, 3> rotation_error;
+  Eigen::Vector3d e_rot;
+  rotation_error = rotation_M.transpose() * ori_init_;
+
+  e_rot(0) = rotation_error(2,1) - rotation_error(1,2);
+  e_rot(1) = rotation_error(0,2) - rotation_error(2,0);
+  e_rot(2) = rotation_error(1,0) - rotation_error(0,1);
+  
 
 	int kp_joint = 100;
-	int kp_operation = 250;
+	int kp_operation = 100;
 	
-	tau_cmd = kp_operation * J_pos.transpose() * (pos_init_ - position);
+	tau_cmd = kp_operation * ( J_pos.transpose() * (pos_init_ - position) + J_ori.transpose() * e_rot );
 	//tau_cmd = kp_joint*(q-q_init);
   
 	
