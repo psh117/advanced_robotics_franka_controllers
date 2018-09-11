@@ -77,12 +77,12 @@ void HW1Controller::starting(const ros::Time& time) {
   start_time_ = time;
 	
   for (size_t i = 0; i < 7; ++i) {
-    q_init(i) = joint_handles_[i].getPosition();
+    q_init_(i) = joint_handles_[i].getPosition();
   }
   
   const franka::RobotState &robot_state = state_handle_->getRobotState();
-  transform_init = Eigen::Matrix4d::Map(robot_state.O_T_EE.data());
-  pos_init = transform.translation();	
+  transform_init_ = Eigen::Matrix4d::Map(robot_state.O_T_EE.data());
+  pos_init_ = transform_init_.translation();	
 }
 
 
@@ -117,9 +117,9 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Matrix<double, 7, 1> tau_cmd;
 
 	int kp_joint = 100;
-	int kp_operation = 100;
+	int kp_operation = 250;
 	
-	tau_cmd = kp_operation * J_pos.transpose() * (pos_init - position);
+	tau_cmd = kp_operation * J_pos.transpose() * (pos_init_ - position);
 	//tau_cmd = kp_joint*(q-q_init);
   
 	
