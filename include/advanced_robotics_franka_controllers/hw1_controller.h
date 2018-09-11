@@ -40,6 +40,7 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
   Eigen::Matrix<double, 7, 1> q_init_;
   Eigen::Affine3d transform_init_;
   Eigen::Vector3d pos_init_;
+  Eigen::Matrix<double, 3, 3> ori_init_;
 
 
 };
