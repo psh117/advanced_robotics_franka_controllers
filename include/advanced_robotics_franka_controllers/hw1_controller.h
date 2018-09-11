@@ -38,6 +38,8 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
   franka_hw::TriggerRate print_rate_trigger_{10}; 
 									   
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> q_init();
+  Eigen::Affine3d transform_init;
+  Eigen::Vector3d pos_init;
 
 
 };
