@@ -75,11 +75,14 @@ bool HW1Controller::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle&
 
 void HW1Controller::starting(const ros::Time& time) {
   start_time_ = time;
+	
   for (size_t i = 0; i < 7; ++i) {
     q_init(i) = joint_handles_[i].getPosition();
   }
- 
-	
+  
+  const franka::RobotState &robot_state = state_handle_->getRobotState();
+  transform_init = Eigen::Matrix4d::Map(robot_state.O_T_EE.data());
+  pos_init = transform.translation();	
 }
 
 
@@ -100,13 +103,24 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> coriolis(coriolis_array.data());
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> q(robot_state.q.data());
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> qd(robot_state.dq.data());
-  Eigen::Matrix<double, 7, 1> tau_cmd;
+	
 
   // Compute here
-	
-	int kp = 100;
 		
-	tau_cmd = kp*(q-q_init);
+	
+  Eigen::Affine3d transform(Eigen::Matrix4d::Map(robot_state.O_T_EE.data()));
+  Eigen::Vector3d position(transform.translation());
+  Eigen::Matrix<double, 3, 3> rotatioin_M(transform.rotation());
+
+  Eigen::Matrix<double, 3, 7> J_pos(jacobian.topRows(3));
+ 
+  Eigen::Matrix<double, 7, 1> tau_cmd;
+
+	int kp_joint = 100;
+	int kp_operation = 100;
+	
+	tau_cmd = kp_operation * J_pos.transpose() * (pos_init - position);
+	//tau_cmd = kp_joint*(q-q_init);
   
 	
   //
