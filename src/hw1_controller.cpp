@@ -106,35 +106,75 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> q(robot_state.q.data());
   Eigen::Map<const Eigen::Matrix<double, 7, 1>> qd(robot_state.dq.data());
 	
-
+  ros::Duration simulation_time = time - start_time_;
   // Compute here
-		
+
+  Eigen::Matrix<double, 6, 6> lamda;
+  Eigen::Matrix<double, 3, 3> lamda_pos;
+  Eigen::Matrix<double, 3, 3> lamda_ori;
+
+  Eigen::Matrix<double, 7, 1> tau_joint_sensor;
+
+  tau_joint_sensor = tau_measured - gravity;
 	
   Eigen::Affine3d transform(Eigen::Matrix4d::Map(robot_state.O_T_EE.data()));
   Eigen::Vector3d position(transform.translation());
   Eigen::Matrix<double, 3, 3> rotation_M(transform.rotation());
-
+  
   Eigen::Matrix<double, 3, 7> J_pos(jacobian.topRows(3));
   Eigen::Matrix<double, 3, 7> J_ori(jacobian.bottomRows(3));
+
+  lamda = (jacobian * mass_matrix.inverse() * jacobian.transpose()).inverse();
+  lamda_pos = lamda.block(0,0,3,3);
+  lamda_ori = lamda.block(3,3,3,3);
+  
  
   Eigen::Matrix<double, 7, 1> tau_cmd;
 	
 	
-  Eigen::Matrix<double, 3, 3> rotation_error;
-  Eigen::Vector3d e_rot;
-  rotation_error = rotation_M.transpose() * ori_init_;
+  // Eigen::Matrix<doubtau_joint_sensor
+  // Eigen::Vector3d e_tau_joint_sensor
+  // Eigen::Vector3d e_tau_joint_sensor
+  // Eigen::VectorXd e_tau_joint_sensor
+  // e_total.resize(6);tau_joint_sensor
+  // e_total.setZero();
 
-  e_rot(0) = rotation_error(2,1) - rotation_error(1,2);
-  e_rot(1) = rotation_error(0,2) - rotation_error(2,0);
-  e_rot(2) = rotation_error(1,0) - rotation_error(0,1);
+  // rotation_error = rotation_M.transpose() * ori_init_;
+
+
+  // e_rot_ee(0) = rotation_error(2,1) - rotation_error(1,2);
+  // e_rot_ee(1) = rotation_error(0,2) - rotation_error(2,0);
+  // e_rot_ee(2) = rotation_error(1,0) - rotation_error(0,1);
+
+  // e_rot = rotation_M * e_rot_ee;  
+
+
+  // e_total(0) = (pos_init_ - position)(0);
+  // e_total(1) = (pos_init_ - position)(1);
+  // e_total(2) = (pos_init_ - position)(2);
+  // e_total(3) = e_rot(0);
+  // e_total(4) = e_rot(1);
+  // e_total(5) = e_rot(2);  
   
 
-	int kp_joint = 100;
-	int kp_operation = 100;
-	
-	tau_cmd = kp_operation * ( J_pos.transpose() * (pos_init_ - position) + J_ori.transpose() * e_rot );
-	//tau_cmd = kp_joint*(q-q_init);
+	// int kp_joint = 30;
+  // Eigen::Matrix<double, 6 , 6> kp_oper;
+  // kp_oper.setZero();
+  // kp_oper(0,0) = kp_operation;
+  // kp_oper(1,1) = kp_operation;
+  // kp_oper(2,2) = kp_operation;
+  // kp_oper(3,3) = kp_ori_operation;
+  // kp_oper(4,4) = kp_ori_operation;
+  // kp_oper(5,5) = kp_ori_operation;
   
+
+  //tau_cmd =  J_pos.transpose() * kp_operation * lamda_pos * (pos_init_ - position) + J_ori.transpose() * kp_ori_operation * lamda_ori * e_rot;
+  //tau_cmd =  J_pos.transpose() * kp_operation * lamda_pos * (pos_init_ - position);
+  //tau_cmd =  J_pos.transpose() * kp_operation * (pos_init_ - position) + J_ori.transpose() * kp_ori_operation * e_rot;
+  //tau_cmd = jacobian.transpose() * lamda * kp_oper * e_total; 
+	//tau_cmd = kp_joint*mass_matrix*(q_init_-q);
+  //tau_cmd = kp_joint*(q_init_-q);
+
 	
   //
 
@@ -145,6 +185,12 @@ void HW1Controller::update(const ros::Time& time, const ros::Duration& period) {
   if (print_rate_trigger_()) {
     ROS_INFO("--------------------------------------------------");
     ROS_INFO_STREAM("tau :" << tau_cmd.transpose());
+    //ROS_INFO_STREAM("error_pos :" << (pos_init_ - position).transpose() );
+    //ROS_INFO_STREAM("error_ori :" << e_rot.transpose() );
+    ROS_INFO_STREAM("time :"<< simulation_time);
+
+    
+
   }
 }
 
