@@ -4,16 +4,26 @@ project(advanced_robotics_franka_controllers)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+LIST( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/../rbdl" )
+LIST( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}" )
+
+
+INCLUDE(cmake/FindRBDL.cmake)
+
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   dynamic_reconfigure
   franka_hw
+  franka_gripper
   geometry_msgs
   hardware_interface
   pluginlib
   realtime_tools
   roscpp
   rospy
+  roslib
 )
 
 find_package(Eigen3 REQUIRED)
@@ -39,14 +49,65 @@ catkin_package(
 
 include_directories(
   include
+    ${RBDL_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${Franka_INCLUDE_DIRS}
 )
 
 
+
+
 add_library(${PROJECT_NAME}
-  src/hw1_controller.cpp
+src/collision_detection_controller.cpp
+src/collision_detection_controller.cpp
+src/jaesug_controller.cpp
+#src/position_joint_space_slam_test_controller.cpp
+#src/impedance_controller.cpp
+#src/test_controller1.cpp
+src/position_task_space_controller.cpp
+#src/position_task_space_controller_sy_dual_pin.cpp
+#src/position_task_space_controller_sy_circle.cpp
+src/position_joint_space_controller.cpp
+#src/position_joint_space_controller_tasktransition.cpp
+#src/position_joint_space_controller_je.cpp
+#src/position_joint_dob_controller.cpp
+#src/velocity_task_space_controller.cpp
+#src/velocity_joint_space_controller.cpp
+#src/velocity_joint_space_controller_dob.cpp
+src/suhan_controller.cpp
+#src/hw1_controller.cpp
+src/torque_joint_space_controller.cpp
+#src/torque_joint_space_controller_sy.cpp
+#src/torque_joint_space_controller_spiral.cpp
+src/torque_joint_space_controller_dual_spiral.cpp
+#src/torque_joint_space_controller_screw.cpp
+#src/torque_joint_space_controller_screw2.cpp
+#src/torque_joint_space_controller_with_torque_ext.cpp
+#src/teaching_detecting_dob.cpp
+#src/teaching_detecting_recording.cpp
+src/torque_joint_space_controller_rrt.cpp
+#src/torque_joint_space_controller_three_pin.cpp
+#src/torque_joint_space_controller_sy_three_pin.cpp
+#src/torque_joint_space_controller_sy_circle.cpp
+src/torque_joint_space_controller_assembly_strategy.cpp
+#src/torque_joint_space_controller_stefan_gravity.cpp
+src/torque_joint_space_controller_side_chair.cpp
+src/torque_joint_space_controller_place.cpp
+src/torque_joint_space_controller_sy_dual_a.cpp
+src/torque_joint_space_controller_sy_dual_pin.cpp
+#src/torque_joint_space_controller_sy_press.cpp
+src/torque_joint_space_controller_sy_startpoint.cpp
+src/torque_joint_space_controller_revolve.cpp
+src/torque_joint_space_controller_realsense.cpp
+src/torque_joint_space_controller_hip.cpp
+#src/torque_joint_space_controller_triple.cpp
+src/torque_joint_space_controller_fuzzy.cpp
+src/torque_joint_space_controller_drill.cpp
+src/robot_model.cpp
+src/torque_joint_space_controller_joint_test.cpp
+src/position_joint_space_controller_joint_test.cpp
+src/velocity_joint_space_controller.cpp
 )
 
 add_dependencies(advanced_robotics_franka_controllers
@@ -60,6 +121,8 @@ add_dependencies(advanced_robotics_franka_controllers
 target_link_libraries(${PROJECT_NAME} PUBLIC
   ${Franka_LIBRARIES}
   ${catkin_LIBRARIES}
+    ${RBDL_LIBRARY}
+
 )
 #############
 ## Install ##

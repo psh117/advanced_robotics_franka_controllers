@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <memory>
@@ -17,11 +18,14 @@
 #include <geometry_msgs/Twist.h>
 #include <Eigen/Dense>
 
+#include "math_type_define.h"
+
 namespace advanced_robotics_franka_controllers {
 
-class HW1Controller : public controller_interface::MultiInterfaceController<
+class PositionJointSpaceControllerJointTest : public controller_interface::MultiInterfaceController<
 								   franka_hw::FrankaModelInterface,
-								   hardware_interface::EffortJointInterface,
+//								   hardware_interface::EffortJointInterface,
+                   hardware_interface::PositionJointInterface,
 								   franka_hw::FrankaStateInterface> {
                      
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& node_handle) override;
@@ -34,14 +38,25 @@ class HW1Controller : public controller_interface::MultiInterfaceController<
   std::vector<hardware_interface::JointHandle> joint_handles_;
 
   ros::Time start_time_;
-
+  ros::Duration elapsed_time_;
   franka_hw::TriggerRate print_rate_trigger_{10}; 
 									   
   Eigen::Matrix<double, 7, 1> q_init_;
+  Eigen::Matrix<double, 7, 1> q_goal_;
   Eigen::Affine3d transform_init_;
-  Eigen::Vector3d pos_init_;
-  Eigen::Matrix<double, 3, 3> ori_init_;
 
+  DyrosMath::SaveData joint_data;
+  DyrosMath::SaveData save_data1;
+
+  //FILE *hqp_joint_vel;
+  //FILE *hqp_joint_pos;
+  //FILE *hqp_joint_tor;
+
+  FILE *joint0_data;
+  FILE *joint_cmd;
+  FILE *joint_real;
+
+  
 
 };
 

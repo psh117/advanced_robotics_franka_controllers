@@ -1,5 +1,340 @@
-hw1_controller:
-    type: advanced_robotics_franka_controllers/HW1Controller
+torque_joint_space_controller:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_spiral:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSpiral
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_dual_spiral:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerDualSpiral
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_sy_three_pin:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSyThreePin
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_sy_dual_a:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSyDualA
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_sy_dual_pin:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSyDualPin
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_sy_press:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSyPress
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_sy_startpoint:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSyStartpoint
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_rrt:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerRRT
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_stefan_gravity:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerStefanGravity
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+suhan_controller:
+    type: advanced_robotics_franka_controllers/SuhanController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+position_joint_space_controller:
+    type: advanced_robotics_franka_controllers/PositionJointSpaceController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+position_joint_space_controller_tasktransition:
+    type: advanced_robotics_franka_controllers/PositionJointSpaceControllerTasktransition
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+position_task_space_controller:
+    type: advanced_robotics_franka_controllers/PositionTaskSpaceController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+position_task_space_controller_sy_dual_pin:
+    type: advanced_robotics_franka_controllers/PositionTaskSpaceControllerSyDualPin
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+torque_joint_space_controller_assembly_strategy:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerAssemblyStrategy
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_side_chair:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerSideChair
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_place:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerPlace
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_revolve:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerRevolve
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+jaesug_controller:
+    type: advanced_robotics_franka_controllers/JaesugController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_realsense:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerRealsense
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_hip:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerHip
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_triple:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerTriple
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_fuzzy:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerFuzzy
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_drill:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerDrill
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+
+
+collision_detection_controller:
+    type: advanced_robotics_franka_controllers/CollisionDetectionController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+torque_joint_space_controller_joint_test:
+    type: advanced_robotics_franka_controllers/TorqueJointSpaceControllerJointTest
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+position_joint_space_controller_joint_test:
+    type: advanced_robotics_franka_controllers/PositionJointSpaceControllerJointTest
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+velocity_joint_space_controller:
+    type: advanced_robotics_franka_controllers/VelocityJointSpaceController
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+
+collision_detection_controller:
+    type: advanced_robotics_franka_controllers/CollisionDetectionController
     arm_id: panda
     joint_names:
         - panda_joint1
