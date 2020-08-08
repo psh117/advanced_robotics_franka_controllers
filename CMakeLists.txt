@@ -59,8 +59,6 @@ include_directories(
   ${Franka_INCLUDE_DIRS}
 )
 
-link_directories(/usr/local/lib)
-
 add_library(${PROJECT_NAME}
 src/collision_detection_controller.cpp
 src/collision_detection_controller.cpp
@@ -124,8 +122,8 @@ add_dependencies(advanced_robotics_franka_controllers
 target_link_libraries(${PROJECT_NAME} PUBLIC
   ${Franka_LIBRARIES}
   ${catkin_LIBRARIES}
-  ${RBDL_LIBRARY}
-  ftd2xx "-Wl,-rpath=/usr/local/lib"
+    ${RBDL_LIBRARY}
+  ${CMAKE_SOURCE_DIR}/lib/libftd2xx.a
   pthread
   rt
 )
