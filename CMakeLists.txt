@@ -24,6 +24,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   roslib
+  moveit_ros_planning_interface
+  moveit_visual_tools
 )
 
 find_package(Eigen3 REQUIRED)
@@ -39,6 +41,8 @@ catkin_package(
     hardware_interface
     pluginlib
     realtime_tools
+    moveit_ros_planning_interface
+    moveit_visual_tools
     roscpp
   DEPENDS Franka
 )
@@ -55,8 +59,7 @@ include_directories(
   ${Franka_INCLUDE_DIRS}
 )
 
-
-
+link_directories(/usr/local/lib)
 
 add_library(${PROJECT_NAME}
 src/collision_detection_controller.cpp
@@ -121,8 +124,10 @@ add_dependencies(advanced_robotics_franka_controllers
 target_link_libraries(${PROJECT_NAME} PUBLIC
   ${Franka_LIBRARIES}
   ${catkin_LIBRARIES}
-    ${RBDL_LIBRARY}
-
+  ${RBDL_LIBRARY}
+  ftd2xx "-Wl,-rpath=/usr/local/lib"
+  pthread
+  rt
 )
 #############
 ## Install ##
