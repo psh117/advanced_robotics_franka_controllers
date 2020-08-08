@@ -41,8 +41,6 @@ catkin_package(
     hardware_interface
     pluginlib
     realtime_tools
-    moveit_ros_planning_interface
-    moveit_visual_tools
     roscpp
   DEPENDS Franka
 )

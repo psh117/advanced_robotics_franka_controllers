@@ -10,6 +10,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
+  <build_depend>moveit_visual_tools</build_depend>
 
   <depend>controller_interface</depend>
   <depend>dynamic_reconfigure</depend>
@@ -26,6 +28,8 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>panda_moveit_config</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>moveit_ros_planning_interface</exec_depend>
+  <exec_depend>moveit_visual_tools</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
