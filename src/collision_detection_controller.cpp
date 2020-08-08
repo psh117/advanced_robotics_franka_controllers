@@ -159,6 +159,9 @@ namespace advanced_robotics_franka_controllers
 
     void CollisionDetectionController::starting(const ros::Time& time)
     {
+        ros::AsyncSpinner spinner(1);
+        spinner.start();
+        
         generator.seed(rn());
         double range = 0.0;
         for (size_t i = 0; i < 7; i++)
