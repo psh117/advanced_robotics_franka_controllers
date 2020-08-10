@@ -138,13 +138,13 @@ namespace advanced_robotics_franka_controllers
         fs.open("log.txt", (std::ofstream::out | std::ofstream::trunc));
         if (!fs.is_open())
         {
-            ROS_ERROR_STREAM("Can't open log file");
+            ROS_ERROR_STREAM("Can't open a file for logging");
             FT_Close(ft_handle);
             return false;
         }
 
         mode = WAIT;
-        generate_random_motion = false;
+        generate_random_motion = true;
         random_motion_generated = false;
         waiting = false;
         executing = false;
@@ -162,7 +162,7 @@ namespace advanced_robotics_franka_controllers
         ros::AsyncSpinner spinner(1);
         spinner.start();
         
-        generator.seed(rn());
+        generator.seed(rd());
         double range = 0.0;
         for (size_t i = 0; i < 7; i++)
         {
@@ -198,6 +198,7 @@ namespace advanced_robotics_franka_controllers
         plane.coef[2] = 1.0;
         plane.coef[3] = 0.0;
         geometry_msgs::Pose pose;
+        pose.position.z = 0.1;
         collision_object.planes.push_back(plane);
         collision_object.plane_poses.push_back(pose);
         collision_object.operation = collision_object.ADD;
@@ -232,8 +233,11 @@ namespace advanced_robotics_franka_controllers
                 for (int i = 0; i < 7; i++) joint_group_positions[i] = ((angles[i])(generator));
                 move_group.setJointValueTarget(joint_group_positions);
             } while (move_group.plan(random_plan) != moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            safe_random_plan = random_plan;
 
             random_motion_generated = true;
+            visual_tools.publishTrajectoryLine(random_plan.trajectory_, joint_model_group);
+            visual_tools.trigger();
         }
     }
 
@@ -247,13 +251,15 @@ namespace advanced_robotics_franka_controllers
         int collision;
         register int i;
 
-        time_1 = std::chrono::system_clock::now(); 
+        time_1 = (std::chrono::system_clock::now() - std::chrono::milliseconds(11));
         while (1)
         {
             time_2 = std::chrono::system_clock::now();
             interval = std::chrono::duration_cast<std::chrono::microseconds>(time_2 - time_1);
             if (interval.count() < 10000) continue;
             time_1 = std::chrono::system_clock::now();
+            if (!ft232h) break;
+            if (!fs.is_open()) break;
             buffer = 0x83;
             FT_Write(ft_handle, &buffer, 1, &num_bytes);
             const franka::RobotState& robot_state = state_handle_->getRobotState();
@@ -308,7 +314,6 @@ namespace advanced_robotics_franka_controllers
     void CollisionDetectionController::update(const ros::Time& time, const ros::Duration& period)
     {
         const franka::RobotState& robot_state = state_handle_->getRobotState();
-        const std::array<double, 42>& jacobian_array = model_handle_->getZeroJacobian(franka::Frame::kEndEffector);
         const std::array<double, 7>& gravity_array = model_handle_->getGravity();
         const std::array<double, 49>& massmatrix_array = model_handle_->getMass();
         const std::array<double, 7>& coriolis_array = model_handle_->getCoriolis();
@@ -328,7 +333,7 @@ namespace advanced_robotics_franka_controllers
 
         switch (mode)
         {
-        case WAIT: wait(q_desired, qd_desired, q); break;
+        case WAIT: wait(current_time, q_desired, qd_desired, q); break;
 
         case EXEC: exec(current_time, q_desired, qd_desired); break;
 
@@ -352,11 +357,16 @@ namespace advanced_robotics_franka_controllers
         for (int i = 0; i < 7; i++) joint_handles_[i].setCommand(tau_cmd(i));
     }
 
-    void CollisionDetectionController::wait(Eigen::Matrix<double, 7, 1>& q_desired, 
+    void CollisionDetectionController::wait(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
         Eigen::Matrix<double, 7, 1>& qd_desired, Eigen::Map<const Eigen::Matrix<double, 7, 1>>& q)
     {
-        if (!waiting) { generateNewMotion(); waiting = true; }
-        if (checkForNewMotion()) { waiting = false; mode = EXEC; }
+        if (!waiting) { waiting = true; }
+        if (checkForNewMotion())
+        {
+            waiting = false; mode = EXEC;
+            exec(current_time, q_desired, qd_desired);
+            return;
+        }
         for (int i = 0; i < 7; i++)
         {
             q_desired(i) = q(i);
@@ -373,38 +383,38 @@ namespace advanced_robotics_franka_controllers
         if (!executing)
         {
             start_time = current_time;
-            waypoints = random_plan.trajectory_.joint_trajectory.points.size();
+            waypoints = safe_random_plan.trajectory_.joint_trajectory.points.size();
             waypoint = 0;
-            end_time = random_plan.trajectory_.joint_trajectory.points[waypoints - 1].time_from_start.toSec();
+            end_time = safe_random_plan.trajectory_.joint_trajectory.points[waypoints - 1].time_from_start.toSec();
             end_time += start_time;
+            generateNewMotion();
             executing = true;
         }
         if (current_time > end_time)
         {
-            executing = false;
-            mode = REST;
+            executing = false; mode = REST;
             rest(current_time, q_desired, qd_desired);
             return;
         }
         while (waypoint < waypoints)
         {
             waypoint++;
-            if (current_time < (random_plan.trajectory_.joint_trajectory.points[waypoint].time_from_start.toSec() + 
+            if (current_time <= (safe_random_plan.trajectory_.joint_trajectory.points[waypoint].time_from_start.toSec() + 
                 start_time)) break; 
         }
         waypoint--;
-        double interval_start_time = (random_plan.trajectory_.joint_trajectory.points[waypoint].time_from_start.toSec() + 
+        double interval_start_time = (safe_random_plan.trajectory_.joint_trajectory.points[waypoint].time_from_start.toSec() + 
             start_time);
-        double interval_end_time = (random_plan.trajectory_.joint_trajectory.points[waypoint + 1].time_from_start.toSec() + 
+        double interval_end_time = (safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].time_from_start.toSec() + 
             start_time);          
         for (int i = 0; i < 7; i++)
         {
-            x_0 = random_plan.trajectory_.joint_trajectory.points[waypoint].positions[i];
-            x_dot_0 = random_plan.trajectory_.joint_trajectory.points[waypoint].velocities[i];
-            x_ddot_0 = random_plan.trajectory_.joint_trajectory.points[waypoint].accelerations[i];
-            x_0 = random_plan.trajectory_.joint_trajectory.points[waypoint + 1].positions[i];
-            x_dot_0 = random_plan.trajectory_.joint_trajectory.points[waypoint + 1].velocities[i];
-            x_ddot_0 = random_plan.trajectory_.joint_trajectory.points[waypoint + 1].accelerations[i];
+            x_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].positions[i];
+            x_dot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].velocities[i];
+            x_ddot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].accelerations[i];
+            x_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].positions[i];
+            x_dot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].velocities[i];
+            x_ddot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].accelerations[i];
             cmd[i] = quintic_spline(current_time, interval_start_time, interval_end_time, 
                 x_0, x_dot_0, x_ddot_0, x_f, x_dot_f, x_ddot_f);
         }
@@ -422,8 +432,8 @@ namespace advanced_robotics_franka_controllers
         if (current_time > end_time) { resting = false; mode = WAIT; }
         for (int i = 0; i < 7; i++)
         {
-            q_desired(i) = random_plan.trajectory_.joint_trajectory.points[waypoints - 1].positions[i];
-            qd_desired(i) = random_plan.trajectory_.joint_trajectory.points[waypoints - 1].velocities[i];
+            q_desired(i) = safe_random_plan.trajectory_.joint_trajectory.points[waypoints - 1].positions[i];
+            qd_desired(i) = safe_random_plan.trajectory_.joint_trajectory.points[waypoints - 1].velocities[i];
         }
     }
 

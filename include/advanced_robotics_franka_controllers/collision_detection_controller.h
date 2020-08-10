@@ -42,7 +42,7 @@ namespace advanced_robotics_franka_controllers
         bool checkForNewMotion(void);
         void publish(void);
         void generate(void);
-        void CollisionDetectionController::wait(Eigen::Matrix<double, 7, 1>& q_desired, 
+        void CollisionDetectionController::wait(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
             Eigen::Matrix<double, 7, 1>& qd_desired, Eigen::Map<const Eigen::Matrix<double, 7, 1>>& q);
         void CollisionDetectionController::exec(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
             Eigen::Matrix<double, 7, 1>& qd_desired);
@@ -65,7 +65,7 @@ namespace advanced_robotics_franka_controllers
         std::vector<hardware_interface::JointHandle> joint_handles_;
         franka_hw::TriggerRate print_rate_trigger_{10}; 
 
-        std::random_device rn;
+        std::random_device rd;
         std::default_random_engine generator;
         std::uniform_real_distribution<double> angles[7];
 
@@ -73,6 +73,7 @@ namespace advanced_robotics_franka_controllers
         const double joint_q_min[7] = {-2.8973, -1.7628, -2.8973, -3.0178, -2.8973, -0.0175, -2.8973};
 
         moveit::planning_interface::MoveGroupInterface::Plan random_plan;
+        moveit::planning_interface::MoveGroupInterface::Plan safe_random_plan;
         FT_HANDLE ft_handle;
         bool ft232h;
         std::ofstream fs;
