@@ -74,6 +74,7 @@ namespace advanced_robotics_franka_controllers
 
         moveit::planning_interface::MoveGroupInterface::Plan random_plan;
         moveit::planning_interface::MoveGroupInterface::Plan safe_random_plan;
+        Eigen::Matrix<double, 7, 1> tau_c;
         FT_HANDLE ft_handle;
         bool ft232h;
         std::ofstream fs;

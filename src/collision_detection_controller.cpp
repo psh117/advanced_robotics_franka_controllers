@@ -292,6 +292,7 @@ namespace advanced_robotics_franka_controllers
             for (i = 0; i < 6; i++) fs << robot_state.O_ddP_EE_c[i] << ','; // Last commanded end effector acceleration in base frame
             for (i = 0; i < 7; i++) fs << robot_state.theta[i] << ','; // Motor position
             for (i = 0; i < 7; i++) fs << robot_state.dtheta[i] << ','; // Motor velocity
+            for (i = 0; i < 7; i++) fs << tau_c(i) << ','; // Commanded joint touque
             FT_Read(ft_handle, &buffer, 1, &num_bytes);
             collision = ((buffer & 0x4) > 0) ? 0 : 1;
             fs << collision << ',' << (1 - collision) << std::endl;
@@ -355,6 +356,7 @@ namespace advanced_robotics_franka_controllers
         }
 
         for (int i = 0; i < 7; i++) joint_handles_[i].setCommand(tau_cmd(i));
+        tau_c = tau_cmd;
     }
 
     void CollisionDetectionController::wait(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
