@@ -20,7 +20,7 @@
 #include <franka/robot_state.h>
 #include "math_type_define.h"
 
-#define MAX_FILE_SIZE 10000000
+#define MAX_FILE_SIZE 100000000 // 100MB
 
 
 namespace advanced_robotics_franka_controllers
