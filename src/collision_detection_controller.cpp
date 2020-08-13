@@ -251,13 +251,16 @@ namespace advanced_robotics_franka_controllers
         std::chrono::system_clock::time_point time_2;
         std::chrono::microseconds interval;
         franka::RobotState robot_state;
+        Eigen::Matrix<double, 7, 7> mass_matrix;
+        Eigen::Matrix<double, 7, 1> coriolis;
+        Eigen::Matrix<double, 7, 1> gravity;
         Eigen::Matrix<double, 7, 1> tau_c;
         Eigen::Matrix<double, 7, 1> tau_dyn;
         DWORD num_bytes;
         BYTE buffer;
         int file_index = 1;
         int collision;
-        register int i;
+        register int i, j;
 
         time_1 = (std::chrono::system_clock::now() - std::chrono::milliseconds(11));
         while (1)
@@ -273,6 +276,9 @@ namespace advanced_robotics_franka_controllers
             FT_Write(ft_handle, &buffer, 1, &num_bytes);
             pthread_mutex_lock(&mutex);
             robot_state = this->robot_state;
+            mass_matrix = this->mass_matrix;
+            coriolis = this->coriolis;
+            gravity = this->gravity;
             tau_c = this->tau_c;
             tau_dyn = this->tau_dyn;
             pthread_mutex_unlock(&mutex);
@@ -291,6 +297,11 @@ namespace advanced_robotics_franka_controllers
             for (i = 0; i < 7; i++) fs << robot_state.dtheta[i] << ','; // Motor velocity
             for (i = 0; i < 7; i++) fs << tau_c(i) << ','; // Commanded joint touque
             for (i = 0; i < 7; i++) fs << tau_dyn(i) << ','; // Dynamic torque
+            for (i = 0; i < 7; i++) { for (j = 0; j < 7; j++) fs << mass_matrix(i, j) << ','; } // Mass matrix
+            for (i = 0; i < 7; i++) fs << coriolis(i) << ','; // Coriolis
+            for (i = 0; i < 7; i++) fs << gravity(i) << ','; // Gravity
+            for (i = 0; i < 7; i++) fs << robot_state.joint_collision[i] << ','; // Indicates which contact level is activated in which joint
+            for (i = 0; i < 6; i++) fs << robot_state.cartesian_collision[i] << ','; // Indicates which contact level is activated in which Cartesian dimension
             FT_Read(ft_handle, &buffer, 1, &num_bytes);
             collision = ((buffer & 0x4) > 0) ? 0 : 1;
             fs << collision << ',' << (1 - collision) << std::endl;
@@ -373,13 +384,16 @@ namespace advanced_robotics_franka_controllers
 
         pthread_mutex_lock(&mutex);
         this->robot_state = robot_state;
+        this->mass_matrix = mass_matrix;
+        this->coriolis = coriolis;
+        this->gravity = gravity;
         this->tau_dyn = mass_matrix * acceleration + coriolis + gravity;
         this->tau_c = tau_cmd;
         pthread_mutex_unlock(&mutex);
         initialized = true;
     }
 
-    void CollisionDetectionController::wait(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+    void CollisionDetectionController::wait(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
         Eigen::Matrix<double, 7, 1>& qd_desired, Eigen::Map<const Eigen::Matrix<double, 7, 1>>& q)
     {
         if (!waiting) { waiting = true; }
@@ -396,7 +410,7 @@ namespace advanced_robotics_franka_controllers
         }
     }
 
-    void CollisionDetectionController::exec(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+    void CollisionDetectionController::exec(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
         Eigen::Matrix<double, 7, 1>& qd_desired)
     {
         double x_0, x_dot_0, x_ddot_0, x_f, x_dot_f, x_ddot_f;
@@ -447,7 +461,7 @@ namespace advanced_robotics_franka_controllers
         }
     }
 
-    void CollisionDetectionController::rest(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+    void CollisionDetectionController::rest(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
         Eigen::Matrix<double, 7, 1>& qd_desired)
     {
         if (!resting) { resting = true; start_time = current_time; end_time = (start_time + 1.0); }
