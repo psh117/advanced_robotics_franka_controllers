@@ -6,6 +6,7 @@
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <ftd2xx.h>
+#include <pthread.h>
 #include <random>
 #include <fstream>
 #include <chrono>
@@ -18,6 +19,8 @@
 #include <ros/ros.h>
 #include <franka/robot_state.h>
 #include "math_type_define.h"
+
+#define MAX_FILE_SIZE 10000000
 
 
 namespace advanced_robotics_franka_controllers
@@ -135,7 +138,7 @@ namespace advanced_robotics_franka_controllers
             return false;
         }
 
-        fs.open("log.txt", (std::ofstream::out | std::ofstream::trunc));
+        fs.open("log1.txt", (std::ofstream::out | std::ofstream::trunc));
         if (!fs.is_open())
         {
             ROS_ERROR_STREAM("Can't open a file for logging");
@@ -143,6 +146,7 @@ namespace advanced_robotics_franka_controllers
             return false;
         }
 
+        pthread_mutex_init(&mutex, NULL);
         mode = WAIT;
         generate_random_motion = true;
         random_motion_generated = false;
@@ -246,14 +250,19 @@ namespace advanced_robotics_franka_controllers
         std::chrono::system_clock::time_point time_1;
         std::chrono::system_clock::time_point time_2;
         std::chrono::microseconds interval;
+        franka::RobotState robot_state;
+        Eigen::Matrix<double, 7, 1> tau_c;
+        Eigen::Matrix<double, 7, 1> tau_dyn;
         DWORD num_bytes;
         BYTE buffer;
+        int file_index = 1;
         int collision;
         register int i;
 
         time_1 = (std::chrono::system_clock::now() - std::chrono::milliseconds(11));
         while (1)
         {
+            if (!initialized) continue;
             time_2 = std::chrono::system_clock::now();
             interval = std::chrono::duration_cast<std::chrono::microseconds>(time_2 - time_1);
             if (interval.count() < 10000) continue;
@@ -262,21 +271,14 @@ namespace advanced_robotics_franka_controllers
             if (!fs.is_open()) break;
             buffer = 0x83;
             FT_Write(ft_handle, &buffer, 1, &num_bytes);
-            const franka::RobotState& robot_state = state_handle_->getRobotState();
+            pthread_mutex_lock(&mutex);
+            robot_state = this->robot_state;
+            tau_c = this->tau_c;
+            tau_dyn = this->tau_dyn;
+            pthread_mutex_unlock(&mutex);
             fs << robot_state.time.toMSec() << ','; // Strictly monotonically increasing timestamp since robot start(in miliseconds)
             for (i = 0; i < 16; i++) fs << robot_state.O_T_EE[i] << ','; // Measured end effector pose in base frame
-            for (i = 0; i < 16; i++) fs << robot_state.O_T_EE_d[i] << ','; // Last desired end effector pose of motion generation in base frame
-            for (i = 0; i < 16; i++) fs << robot_state.F_T_EE[i] << ','; // End effector frame pose in flange frame
-            for (i = 0; i < 16; i++) fs << robot_state.F_T_NE[i] << ','; // Nominal end effector frame pose in flange frame
-            for (i = 0; i < 16; i++) fs << robot_state.NE_T_EE[i] << ','; // End effector frame pose in nominal end effector frame
-            for (i = 0; i < 16; i++) fs << robot_state.EE_T_K[i] << ','; // Stiffness frame pose in end effector frame
-            for (i = 0; i < 2; i++) fs << robot_state.elbow[i] << ','; // Elbow configuration
-            for (i = 0; i < 2; i++) fs << robot_state.elbow_d[i] << ','; // Desired elbow configuration
-            for (i = 0; i < 2; i++) fs << robot_state.elbow_c[i] << ','; // Commanded elbow configuration
-            for (i = 0; i < 2; i++) fs << robot_state.delbow_c[i] << ','; // Commanded elbow velocity
-            for (i = 0; i < 2; i++) fs << robot_state.ddelbow_c[i] << ','; // Commanded elbow acceleration
             for (i = 0; i < 7; i++) fs << robot_state.tau_J[i] << ','; // Measured link-side joint torque sensor signals
-            for (i = 0; i < 7; i++) fs << robot_state.tau_J_d[i] << ','; // Desired link-side joint torque sensor signals without gravity
             for (i = 0; i < 7; i++) fs << robot_state.dtau_J[i] << ','; // Derivative of measured link-side joint torque sensor signals
             for (i = 0; i < 7; i++) fs << robot_state.q[i] << ','; // Measured joint position
             for (i = 0; i < 7; i++) fs << robot_state.q_d[i] << ','; // Desired joint position
@@ -285,18 +287,29 @@ namespace advanced_robotics_franka_controllers
             for (i = 0; i < 7; i++) fs << robot_state.ddq_d[i] << ','; // Desired joint acceleration
             for (i = 0; i < 7; i++) fs << robot_state.tau_ext_hat_filtered[i] << ','; // Filtered external torque
             for (i = 0; i < 6; i++) fs << robot_state.O_F_ext_hat_K[i] << ','; // Estimated external wrench (force, torque) acting on stiffness frame, expressed relative to the base frame
-            for (i = 0; i < 6; i++) fs << robot_state.K_F_ext_hat_K[i] << ','; //  Estimated external wrench (force, torque) acting on stiffness frame, expressed relative to the stiffness frame
-            for (i = 0; i < 6; i++) fs << robot_state.O_dP_EE_d[i] << ','; // Desired end effector twist in base frame
-            for (i = 0; i < 16; i++) fs << robot_state.O_T_EE_c[i] << ','; // Last commanded end effector pose of motion generation in base frame
-            for (i = 0; i < 6; i++) fs << robot_state.O_dP_EE_c[i] << ','; // Last commanded end effector twist in base frame
-            for (i = 0; i < 6; i++) fs << robot_state.O_ddP_EE_c[i] << ','; // Last commanded end effector acceleration in base frame
             for (i = 0; i < 7; i++) fs << robot_state.theta[i] << ','; // Motor position
             for (i = 0; i < 7; i++) fs << robot_state.dtheta[i] << ','; // Motor velocity
             for (i = 0; i < 7; i++) fs << tau_c(i) << ','; // Commanded joint touque
+            for (i = 0; i < 7; i++) fs << tau_dyn(i) << ','; // Dynamic torque
             FT_Read(ft_handle, &buffer, 1, &num_bytes);
             collision = ((buffer & 0x4) > 0) ? 0 : 1;
             fs << collision << ',' << (1 - collision) << std::endl;
             fs.flush();
+            if (fs.tellp() > MAX_FILE_SIZE)
+            {
+                fs.close();
+                std::string filename("log");
+                file_index++;
+                filename += std::to_string(file_index);
+                filename += ".txt";
+                fs.open(filename.c_str(), (std::ofstream::out | std::ofstream::trunc));
+                if (!fs.is_open())
+                {
+                    ROS_ERROR_STREAM("Can't open a file for logging");
+                    FT_Close(ft_handle);
+                    return;
+                }
+            }
         }
     }
 
@@ -315,13 +328,14 @@ namespace advanced_robotics_franka_controllers
     void CollisionDetectionController::update(const ros::Time& time, const ros::Duration& period)
     {
         const franka::RobotState& robot_state = state_handle_->getRobotState();
-        const std::array<double, 7>& gravity_array = model_handle_->getGravity();
         const std::array<double, 49>& massmatrix_array = model_handle_->getMass();
         const std::array<double, 7>& coriolis_array = model_handle_->getCoriolis();
+        const std::array<double, 7>& gravity_array = model_handle_->getGravity();
 
-        Eigen::Map<const Eigen::Matrix<double, 7, 1>> gravity(gravity_array.data());
         Eigen::Map<const Eigen::Matrix<double, 7, 7>> mass_matrix(massmatrix_array.data());
+        Eigen::Map<const Eigen::Matrix<double, 7, 1>> acceleration(robot_state.ddq_d.data());
         Eigen::Map<const Eigen::Matrix<double, 7, 1>> coriolis(coriolis_array.data());
+        Eigen::Map<const Eigen::Matrix<double, 7, 1>> gravity(gravity_array.data());
         Eigen::Map<const Eigen::Matrix<double, 7, 1>> q(robot_state.q.data());
         Eigen::Map<const Eigen::Matrix<double, 7, 1>> qd(robot_state.dq.data());
 
@@ -356,7 +370,13 @@ namespace advanced_robotics_franka_controllers
         }
 
         for (int i = 0; i < 7; i++) joint_handles_[i].setCommand(tau_cmd(i));
-        tau_c = tau_cmd;
+
+        pthread_mutex_lock(&mutex);
+        this->robot_state = robot_state;
+        this->tau_dyn = mass_matrix * acceleration + coriolis + gravity;
+        this->tau_c = tau_cmd;
+        pthread_mutex_unlock(&mutex);
+        initialized = true;
     }
 
     void CollisionDetectionController::wait(double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
