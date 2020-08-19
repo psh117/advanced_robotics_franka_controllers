@@ -138,7 +138,7 @@ namespace advanced_robotics_franka_controllers
             return false;
         }
 
-        fs.open("log1.txt", (std::ofstream::out | std::ofstream::trunc));
+        fs.open("log1.csv", (std::ofstream::out | std::ofstream::trunc));
         if (!fs.is_open())
         {
             ROS_ERROR_STREAM("Can't open a file for logging");
@@ -283,7 +283,6 @@ namespace advanced_robotics_franka_controllers
             tau_dyn = this->tau_dyn;
             pthread_mutex_unlock(&mutex);
             fs << robot_state.time.toMSec() << ','; // Strictly monotonically increasing timestamp since robot start(in miliseconds)
-            for (i = 0; i < 16; i++) fs << robot_state.O_T_EE[i] << ','; // Measured end effector pose in base frame
             for (i = 0; i < 7; i++) fs << robot_state.tau_J[i] << ','; // Measured link-side joint torque sensor signals
             for (i = 0; i < 7; i++) fs << robot_state.dtau_J[i] << ','; // Derivative of measured link-side joint torque sensor signals
             for (i = 0; i < 7; i++) fs << robot_state.q[i] << ','; // Measured joint position
@@ -292,11 +291,12 @@ namespace advanced_robotics_franka_controllers
             for (i = 0; i < 7; i++) fs << robot_state.dq_d[i] << ','; // Desired joint velocity
             for (i = 0; i < 7; i++) fs << robot_state.ddq_d[i] << ','; // Desired joint acceleration
             for (i = 0; i < 7; i++) fs << robot_state.tau_ext_hat_filtered[i] << ','; // Filtered external torque
-            for (i = 0; i < 6; i++) fs << robot_state.O_F_ext_hat_K[i] << ','; // Estimated external wrench (force, torque) acting on stiffness frame, expressed relative to the base frame
             for (i = 0; i < 7; i++) fs << robot_state.theta[i] << ','; // Motor position
             for (i = 0; i < 7; i++) fs << robot_state.dtheta[i] << ','; // Motor velocity
             for (i = 0; i < 7; i++) fs << tau_c(i) << ','; // Commanded joint touque
             for (i = 0; i < 7; i++) fs << tau_dyn(i) << ','; // Dynamic torque
+            for (i = 0; i < 16; i++) fs << robot_state.O_T_EE[i] << ','; // Measured end effector pose in base frame
+            for (i = 0; i < 6; i++) fs << robot_state.O_F_ext_hat_K[i] << ','; // Estimated external wrench (force, torque) acting on stiffness frame, expressed relative to the base frame
             for (i = 0; i < 7; i++) { for (j = 0; j < 7; j++) fs << mass_matrix(i, j) << ','; } // Mass matrix
             for (i = 0; i < 7; i++) fs << coriolis(i) << ','; // Coriolis
             for (i = 0; i < 7; i++) fs << gravity(i) << ','; // Gravity
@@ -312,7 +312,7 @@ namespace advanced_robotics_franka_controllers
                 std::string filename("log");
                 file_index++;
                 filename += std::to_string(file_index);
-                filename += ".txt";
+                filename += ".csv";
                 fs.open(filename.c_str(), (std::ofstream::out | std::ofstream::trunc));
                 if (!fs.is_open())
                 {
