@@ -138,7 +138,7 @@ namespace advanced_robotics_franka_controllers
             return false;
         }
 
-        fs.open("log1.csv", (std::ofstream::out | std::ofstream::trunc));
+        fs.open("/home/dyros/log1.csv", (std::ofstream::out | std::ofstream::trunc));
         if (!fs.is_open())
         {
             ROS_ERROR_STREAM("Can't open a file for logging");
@@ -158,6 +158,9 @@ namespace advanced_robotics_franka_controllers
         waypoint = 0;
         waypoints = 0;
 
+        thread1 = std::thread(&CollisionDetectionController::generate, this);
+        thread2 = std::thread(&CollisionDetectionController::publish, this);
+
         return true;
     }
 
@@ -173,10 +176,6 @@ namespace advanced_robotics_franka_controllers
             range = ((joint_q_max[i] - joint_q_min[i]) * 0.1);
             angles[i] = std::uniform_real_distribution<double>((joint_q_min[i] + range), (joint_q_max[i] - range));
         }
-
-        std::thread thread1(generate);
-        std::thread thread2(publish);
-
         global_start_time = time.toSec();
     }
 
@@ -193,21 +192,69 @@ namespace advanced_robotics_franka_controllers
         visual_tools.loadRemoteControl();
 
         // Create collision object
-        moveit_msgs::CollisionObject collision_object;
-        collision_object.header.frame_id = move_group.getPlanningFrame();
-        collision_object.id = "plane";
-        shape_msgs::Plane plane;
-        plane.coef[0] = 0.0;
-        plane.coef[1] = 0.0;
-        plane.coef[2] = 1.0;
-        plane.coef[3] = 0.0;
-        geometry_msgs::Pose pose;
-        pose.position.z = 0.1;
-        collision_object.planes.push_back(plane);
-        collision_object.plane_poses.push_back(pose);
-        collision_object.operation = collision_object.ADD;
         std::vector<moveit_msgs::CollisionObject> collision_objects;
-        collision_objects.push_back(collision_object);
+        
+        // Box 1
+        shape_msgs::SolidPrimitive primitive;
+        primitive.type = primitive.BOX;
+        primitive.dimensions.resize(3);
+        primitive.dimensions[0] = 1.93;
+        primitive.dimensions[1] = 4.0;
+        primitive.dimensions[2] = 0.01;
+        moveit_msgs::CollisionObject box1;
+        box1.header.frame_id = move_group.getPlanningFrame();
+        box1.id = "box1";
+        geometry_msgs::Pose box1_pose;
+        box1_pose.position.x = 1.035;
+        box1_pose.position.y = 0.0;
+        box1_pose.position.z = 0.095;
+        box1.primitives.push_back(primitive);
+        box1.primitive_poses.push_back(box1_pose);
+        box1.operation = box1.ADD;
+        collision_objects.push_back(box1);
+
+        // Box 2
+        primitive.dimensions[0] = 1.89;
+        moveit_msgs::CollisionObject box2;
+        box2.header.frame_id = move_group.getPlanningFrame();
+        box2.id = "box2";
+        geometry_msgs::Pose box2_pose;
+        box2_pose.position.x = -1.055;
+        box2_pose.position.y = 0.0;
+        box2_pose.position.z = 0.095;
+        box2.primitives.push_back(primitive);
+        box2.primitive_poses.push_back(box2_pose);
+        box2.operation = box2.ADD;
+        collision_objects.push_back(box2);
+
+        // Box 3
+        primitive.dimensions[0] = 0.18;
+        primitive.dimensions[1] = 1.91;
+        moveit_msgs::CollisionObject box3;
+        box3.header.frame_id = move_group.getPlanningFrame();
+        box3.id = "box3";
+        geometry_msgs::Pose box3_pose;
+        box3_pose.position.x = -0.02;
+        box3_pose.position.y = 1.045;
+        box3_pose.position.z = 0.095;
+        box3.primitives.push_back(primitive);
+        box3.primitive_poses.push_back(box3_pose);
+        box3.operation = box3.ADD;
+        collision_objects.push_back(box3);
+
+        // Box 4
+        moveit_msgs::CollisionObject box4;
+        box4.header.frame_id = move_group.getPlanningFrame();
+        box4.id = "box4";
+        geometry_msgs::Pose box4_pose;
+        box4_pose.position.x = -0.02;
+        box4_pose.position.y = -1.045;
+        box4_pose.position.z = 0.095;
+        box4.primitives.push_back(primitive);
+        box4.primitive_poses.push_back(box4_pose);
+        box4.operation = box4.ADD;
+        collision_objects.push_back(box4);
+
         planning_scene_interface.addCollisionObjects(collision_objects);
         visual_tools.trigger();
 
@@ -216,12 +263,16 @@ namespace advanced_robotics_franka_controllers
         std::vector<double> q; q.resize(7);
         std::vector<double> dq; dq.resize(7);
         moveit::core::RobotState start_state = *(move_group.getCurrentState());
+        move_group.setMaxVelocityScalingFactor(0.2);
         while (1)
         {
+            if (!initialized) continue;
             if (!generate_random_motion) continue;
             generate_random_motion = false;
 
-            const franka::RobotState& robot_state = state_handle_->getRobotState();
+            pthread_mutex_lock(&mutex);
+            const franka::RobotState robot_state = this->robot_state;
+            pthread_mutex_unlock(&mutex);
 
             for (int i = 0; i < 7; i++)
             {
@@ -309,7 +360,7 @@ namespace advanced_robotics_franka_controllers
             if (fs.tellp() > MAX_FILE_SIZE)
             {
                 fs.close();
-                std::string filename("log");
+                std::string filename("/home/dyros/log");
                 file_index++;
                 filename += std::to_string(file_index);
                 filename += ".csv";
@@ -442,16 +493,17 @@ namespace advanced_robotics_franka_controllers
         double interval_start_time = (safe_random_plan.trajectory_.joint_trajectory.points[waypoint].time_from_start.toSec() + 
             start_time);
         double interval_end_time = (safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].time_from_start.toSec() + 
-            start_time);          
+            start_time);
+        cmd.resize(7);
         for (int i = 0; i < 7; i++)
         {
             x_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].positions[i];
             x_dot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].velocities[i];
             x_ddot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint].accelerations[i];
-            x_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].positions[i];
-            x_dot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].velocities[i];
-            x_ddot_0 = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].accelerations[i];
-            cmd[i] = quintic_spline(current_time, interval_start_time, interval_end_time, 
+            x_f = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].positions[i];
+            x_dot_f = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].velocities[i];
+            x_ddot_f = safe_random_plan.trajectory_.joint_trajectory.points[waypoint + 1].accelerations[i];
+            cmd[i] = quintic_spline((current_time - interval_start_time), 0, (interval_end_time - interval_start_time), 
                 x_0, x_dot_0, x_ddot_0, x_f, x_dot_f, x_ddot_f);
         }
         for (int i = 0; i < 7; i++)

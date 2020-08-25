@@ -44,11 +44,11 @@ namespace advanced_robotics_franka_controllers
         bool checkForNewMotion(void);
         void publish(void);
         void generate(void);
-        void CollisionDetectionController::wait(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+        void wait(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
             Eigen::Matrix<double, 7, 1>& qd_desired, Eigen::Map<const Eigen::Matrix<double, 7, 1>>& q);
-        void CollisionDetectionController::exec(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+        void exec(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
             Eigen::Matrix<double, 7, 1>& qd_desired);
-        void CollisionDetectionController::rest(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
+        void rest(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
             Eigen::Matrix<double, 7, 1>& qd_desired);
         static Eigen::Vector3d quintic_spline(
             double time,       // Current time
@@ -82,6 +82,7 @@ namespace advanced_robotics_franka_controllers
         Eigen::Matrix<double, 7, 1> gravity;
         Eigen::Matrix<double, 7, 1> tau_c;
         Eigen::Matrix<double, 7, 1> tau_dyn;
+        std::thread thread1, thread2;
         pthread_mutex_t mutex;
         FT_HANDLE ft_handle;
         bool ft232h;
