@@ -447,7 +447,11 @@ namespace advanced_robotics_franka_controllers
     void CollisionDetectionController::wait(const double current_time, Eigen::Matrix<double, 7, 1>& q_desired, 
         Eigen::Matrix<double, 7, 1>& qd_desired, Eigen::Map<const Eigen::Matrix<double, 7, 1>>& q)
     {
-        if (!waiting) { waiting = true; }
+        if (!waiting)
+        {
+            for (int i = 0; i < 7; i++) q_waiting(i) = q(i);
+            waiting = true;
+        }
         if (checkForNewMotion())
         {
             waiting = false; mode = EXEC;
@@ -456,7 +460,7 @@ namespace advanced_robotics_franka_controllers
         }
         for (int i = 0; i < 7; i++)
         {
-            q_desired(i) = q(i);
+            q_desired(i) = q_waiting(i);
             qd_desired(i) = 0.0;
         }
     }

@@ -95,5 +95,6 @@ namespace advanced_robotics_franka_controllers
         double start_time, end_time;
         int waypoint, waypoints;
         double global_start_time;
+        Eigen::Matrix<double, 7, 1> q_waiting;
     };    
 }  // namespace advanced_robotics_franka_controllers
